@@ -106,58 +106,44 @@ private void drawChart(Graphics g) {
     int chartHeight = height - 2 * padding;
     
     long maxTime = Math.max(singleThreadTime, multiThreadTime);
-    
-    // Включаємо антиаліасінг для кращого вигляду тексту
     g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-    
-    // Осі координат
     g2d.setColor(Color.BLACK);
-    g2d.drawLine(padding, padding, padding, height - padding); // Y вісь
-    g2d.drawLine(padding, height - padding, width - padding, height - padding); // X вісь
-    
-    // Вертикальний текст "Time (ms)" по центру осі Y
-    g2d.rotate(-Math.PI/2); // Повертаємо на 90 градусів проти годинникової стрілки
+    g2d.drawLine(padding, padding, padding, height - padding);
+    g2d.drawLine(padding, height - padding, width - padding, height - padding);
+    g2d.rotate(-Math.PI/2);
     
     FontMetrics fm = g2d.getFontMetrics();
     String timeLabel = "Time (ms)";
     int timeLabelWidth = fm.stringWidth(timeLabel);
-    
-    // Центруємо текст по центру осі Y
     int centerY = (height - padding - padding) / 2 + padding;
     int timeLabelX = -centerY - timeLabelWidth / 2;
     int timeLabelY = padding - 15;
     
     g2d.drawString(timeLabel, timeLabelX, timeLabelY);
-    g2d.rotate(Math.PI/2); // Повертаємо назад
-    
-    // Стовпчики діаграми
+    g2d.rotate(Math.PI/2);
+
     int barWidth = chartWidth / 4;
-    
-    // Однопотоковий (синій)
+
     int singleHeight = (int)((singleThreadTime / (double)maxTime) * chartHeight);
     int singleX = padding + barWidth/2;
     g2d.setColor(new Color(70, 130, 180));
     g2d.fillRect(singleX, height - padding - singleHeight, barWidth, singleHeight);
     g2d.setColor(Color.BLACK);
     
-    // Текст результату над стовпцем
     String singleText = singleThreadTime + " ms";
     int textWidth = fm.stringWidth(singleText);
     g2d.drawString(singleText, singleX + (barWidth - textWidth)/2, height - padding - singleHeight - 5);
     
-    // Багатопотоковий (зелений)
     int multiHeight = (int)((multiThreadTime / (double)maxTime) * chartHeight);
     int multiX = padding + 2 * barWidth;
     g2d.setColor(new Color(34, 139, 34));
     g2d.fillRect(multiX, height - padding - multiHeight, barWidth, multiHeight);
     g2d.setColor(Color.BLACK);
     
-    // Текст результату над стовпцем
     String multiText = multiThreadTime + " ms";
     textWidth = fm.stringWidth(multiText);
     g2d.drawString(multiText, multiX + (barWidth - textWidth)/2, height - padding - multiHeight - 5);
     
-    // Підписи під стовпцями
     String singleLabel = "Single-thread";
     textWidth = fm.stringWidth(singleLabel);
     g2d.drawString(singleLabel, singleX + (barWidth - textWidth)/2, height - padding + 20);
@@ -218,7 +204,6 @@ private void drawChart(Graphics g) {
         appendResult("=== PERFORMANCE TEST ===");
         updateProgress(0);
         
-        // Single-threaded execution using adapter
         setStatus("Single-threaded test...");
         long startTime = System.currentTimeMillis();
         Long singleResult = runSingleThreadedWithProgress(this);
@@ -228,7 +213,6 @@ private void drawChart(Graphics g) {
         appendResult("Time: " + singleTime + " ms");
         appendResult("");
         
-        // Multi-threaded execution using adapter
         setStatus("Multi-threaded test...");
         startTime = System.currentTimeMillis();
         Long multiResult = runMultiThreadedWithProgress(this);
@@ -238,7 +222,6 @@ private void drawChart(Graphics g) {
         appendResult("Time: " + multiTime + " ms");
         appendResult("");
         
-        // Comparison
         double speedup = (double) singleTime / multiTime;
         appendResult(String.format("Speedup: %.2f times", speedup));
         appendResult("============================\n");
@@ -248,7 +231,6 @@ private void drawChart(Graphics g) {
         updateProgress(0);
     }
     
-    // Adapter methods that use original classes but add progress tracking
     private Long runSingleThreadedWithProgress(ProgressUpdater updater) {
         Long summa = 0L;
         int total = Processor.STR_COUNT;
@@ -257,7 +239,6 @@ private void drawChart(Graphics g) {
             Processor p = new Processor();
             summa += p.process();
             
-            // Update progress
             int progress = (int)((i + 1) / (double)total * 50);
             updater.updateProgress(progress);
             updater.setStatus("Single-threaded: " + (i + 1) + "/" + total);
@@ -316,7 +297,6 @@ class SynchronizationPanel extends JPanel implements ProgressUpdater {
     private void initializeUI() {
         setLayout(new BorderLayout());
         
-        // Control Panel
         JPanel controlPanel = new JPanel(new FlowLayout());
         startButton = new JButton("Start Synchronization Test");
         statusLabel = new JLabel("Ready to work");
@@ -325,17 +305,14 @@ class SynchronizationPanel extends JPanel implements ProgressUpdater {
         
         controlPanel.add(startButton);
         controlPanel.add(statusLabel);
-        
-        // Progress Bar
+
         progressBar = new JProgressBar(0, 100);
         progressBar.setStringPainted(true);
-        
-        // Result Area
+
         resultArea = new JTextArea(10, 50);
         resultArea.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(resultArea);
         
-        // Layout
         add(controlPanel, BorderLayout.NORTH);
         add(progressBar, BorderLayout.SOUTH);
         add(scrollPane, BorderLayout.CENTER);
@@ -384,34 +361,28 @@ class SynchronizationPanel extends JPanel implements ProgressUpdater {
         setStatus("Synchronization test in progress...");
         appendResult("=== SYNCHRONIZATION TEST ===");
         
-        // Using the Counter class from CounterTester
         Counter counter = new Counter();
         List<Thread> threads = new ArrayList<>();
         int threadCount = 200;
         int incrementsPerThread = 1000;
         
-        // Create threads with progress update
         for (int i = 0; i < threadCount; i++) {
             Thread thread = new CounterThread(counter);
             threads.add(thread);
             
-            // Update creation progress
             int progress = (int)((i + 1) / (double)threadCount * 50);
             updateProgress(progress);
             setStatus("Creating threads: " + (i + 1) + "/" + threadCount);
         }
         
-        // Start all threads
         for (int i = 0; i < threads.size(); i++) {
             threads.get(i).start();
             
-            // Update starting progress
             int progress = 50 + (int)((i + 1) / (double)threads.size() * 50);
             updateProgress(progress);
             setStatus("Starting threads: " + (i + 1) + "/" + threads.size());
         }
         
-        // Wait for completion
         for (Thread thread : threads) {
             try {
                 thread.join();
@@ -437,7 +408,6 @@ class SynchronizationPanel extends JPanel implements ProgressUpdater {
         setStatus("Synchronization test completed");
         updateProgress(0);
         
-        // Old console output for compatibility
         System.out.println("Counter:" + counter.getCounter());
     }
 }
